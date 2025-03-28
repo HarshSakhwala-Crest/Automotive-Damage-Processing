@@ -8,6 +8,10 @@ import streamlit as st
 from PIL import Image
 from io import BytesIO
 
+query_params = st.experimental_get_query_params()
+if query_params.get("page", [""])[0] == "feedback":
+    st.switch_page("pages/feedback.py")
+
 st.set_page_config(page_title="Damage Repair Cost Estimator") #HTML title
 st.title("Damage Repair Cost Estimator") #page title
 
@@ -374,10 +378,14 @@ if upload_file is not None:
             if st.button("👍 Thumbs Up"):
                 st.session_state.relevance = "positive"
                 st.query_params["relevance"] = "positive"
-                st.switch_page("pages/feedback.py")
+                st.experimental_set_query_params(page="feedback")
+                st.experimental_rerun()
+                # st.switch_page("pages/feedback.py")
 
         with col2:
             if st.button("👎 Thumbs Down"):
                 st.session_state.relevance = "negative"
                 st.query_params["relevance"] = "negative"
-                st.switch_page("pages/feedback.py")   
+                st.experimental_set_query_params(page="feedback")
+                st.experimental_rerun()
+                # st.switch_page("pages/feedback.py")   
