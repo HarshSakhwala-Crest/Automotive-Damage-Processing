@@ -8,10 +8,6 @@ import streamlit as st
 from PIL import Image
 from io import BytesIO
 
-query_params = st.experimental_get_query_params()
-if query_params.get("page", [""])[0] == "feedback":
-    st.switch_page("pages/feedback.py")
-
 st.set_page_config(page_title="Damage Repair Cost Estimator") #HTML title
 st.title("Damage Repair Cost Estimator") #page title
 
@@ -77,7 +73,8 @@ if "damage_description" not in st.session_state:
     st.session_state.damage_description = ""
 if "relevance" not in st.session_state:
     st.session_state.relevance = None
-    
+if "start" not in st.session_state:
+    st.session_state.start = False
 
 st.session_state.selected = st.sidebar.selectbox('Select Car Make', options)
 
@@ -178,6 +175,7 @@ if upload_file is not None:
     if not vehicle_present:
         st.error("No car detected in the uploaded image. Please upload an image containing a car.")
     else:
+        st.session_state.start = True
         s3_client = boto3.client("s3")
         BUCKET_NAME = "uploaded-images-bucket-for-blog"
         FILE_NAME = upload_file.name
@@ -370,22 +368,19 @@ if upload_file is not None:
 
         st.session_state.messages.append({"role": "assistant",
                                             "content": answer})
-        
-        col1, col2 = st.columns(2)
+if st.session_state.start:
+         
+    col1, col2 = st.columns(2)
 
-        # go to next page for user feedback
-        with col1:
-            if st.button("👍 Thumbs Up"):
-                st.session_state.relevance = "positive"
-                st.query_params["relevance"] = "positive"
-                st.experimental_set_query_params(page="feedback")
-                st.experimental_rerun()
-                # st.switch_page("pages/feedback.py")
+            # go to next page for user feedback
+    with col1:
+        if st.button("👍 Thumbs Up"):
+            st.session_state.relevance = "positive"
+            st.query_params["relevance"] = "positive"
+            st.switch_page("pages/feedback.py")
 
-        with col2:
-            if st.button("👎 Thumbs Down"):
-                st.session_state.relevance = "negative"
-                st.query_params["relevance"] = "negative"
-                st.experimental_set_query_params(page="feedback")
-                st.experimental_rerun()
-                # st.switch_page("pages/feedback.py")   
+    with col2:
+        if st.button("👎 Thumbs Down"):
+            st.session_state.relevance = "negative"
+            st.query_params["relevance"] = "negative"
+            st.switch_page("pages/feedback.py")   
