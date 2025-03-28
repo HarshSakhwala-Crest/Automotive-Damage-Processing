@@ -169,22 +169,22 @@ if upload_file is not None:
     # base64_bytes = file_bytes.encode('ascii')
     # image_bytes = base64.b64decode(base64_bytes)
     
-    s3_client = boto3.client("s3")
-    BUCKET_NAME = "uploaded-images-bucket-for-blog"
-    FILE_NAME = upload_file.name
-    
-    s3_client.put_object(
-        Bucket=BUCKET_NAME,
-        Key=FILE_NAME,
-        Body=file_bytes,
-        ContentType="image/jpeg"
-    )
-
     
     vehicle_present, message = check_vehicle_presence(file_bytes)
     if not vehicle_present:
         st.error("No car detected in the uploaded image. Please upload an image containing a car.")
     else:
+        s3_client = boto3.client("s3")
+        BUCKET_NAME = "uploaded-images-bucket-for-blog"
+        FILE_NAME = upload_file.name
+        
+        s3_client.put_object(
+            Bucket=BUCKET_NAME,
+            Key=FILE_NAME,
+            Body=file_bytes,
+            ContentType="image/jpeg"
+        )
+        
         encoded_image = base64.b64encode(file_bytes).decode()
     #Creates the JSON metadata based on the options selected by the user
         json_text = {
@@ -276,10 +276,10 @@ if upload_file is not None:
 
         # Invoke Titan Multimodal Embeddings model
         response = bedrock.invoke_model(
-        body=body,
-        modelId="amazon.titan-embed-image-v1",
-        accept="application/json",
-        contentType="application/json"
+            body=body,
+            modelId="amazon.titan-embed-image-v1",
+            accept="application/json",
+            contentType="application/json"
         )
         embedding = response['body']
         body_output = embedding.read()
@@ -341,6 +341,7 @@ if upload_file is not None:
                 st.sidebar.code(json.dumps(metadata, indent=2)) 
 
                 st.image(img)
+                
         combined_metadata_string = '\n'.join(metadata_strings)
         prompt_full = '<current>' + json_string + '</current>' + '<dataset>' + combined_metadata_string + '</dataset> Instruction; You are calculating the estimated repair cost based on previous data of similar car damages. Take the repair cost of the data set provide within <dataset> and calculate the average cost among all example data sets. And you also need to provide a recommended service provider name from the dataset provided within <dataset> based on the state in which car is damaged and it should be closest one. Explain the math, but you must be brief, and the service provider name should be in next line with the sentence "Recommended Service Provider Name: <service-provider-name>", the answer cannot have more than 3 sentences.'
         
